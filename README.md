@@ -81,3 +81,186 @@ eksctl get all -A   ## Run this command to check the EKS cluster post creation
 You can go back to your AWS dashboard and look for Elastic Kubernetes Service -> Clusters
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/9345f4dd-c9e7-437d-aecc-163e7187fee5)
+
+## 3. Installing the Kubernetes Metrics Server
+
+Install the Kubernetes Metrics server onto the Kubernetes cluster so that Prometheus can collect the performance metrics of Kubernetes.
+
+```
+Deploy the Metrics Server with the following command >>
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+Verify that the metrics-server deployment is running the desired number of pods with the following command >>
+kubectl get deployment metrics-server -n kube-system
+
+```
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/39285c1d-c4d2-4acd-9946-239d285964e5)
+
+## 4. Install Prometheus
+
+Now install the Prometheus using the helm chart.
+
+```
+Add Prometheus helm chart repository >>
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+Update the helm chart repository >>
+helm repo update
+helm repo list
+
+Create prometheus namespace >>
+kubectl create namespace prometheus
+
+Install Prometheus >>
+
+ helm install prometheus prometheus-community/prometheus \
+    --namespace prometheus \
+    --set alertmanager.persistentVolume.storageClass="gp2" \
+    --set server.persistentVolume.storageClass="gp2"
+
+```
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/8f4726bc-cbe2-4e9d-8375-7b00c1d2c50d)
+
+
+## 5. Create IAM OIDC Provider
+
+Your cluster has an OpenID Connect (OIDC) issuer URL associated with it. 
+To use AWS Identity and Access Management (IAM) roles for service accounts, 
+an IAM OIDC provider must exist for your cluster's OIDC issuer URL.
+
+```
+Add IAM Role using eksctl with your cluster name >>
+eksctl create iamserviceaccount \
+  --name ebs-csi-controller-sa \
+  --namespace kube-system \
+  --cluster eks4 \
+  --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
+  --approve \
+  --role-only \
+  --role-name AmazonEKS_EBS_CSI_DriverRole
+
+Then add EBS CSI to eks by running the following command,Enter your account ID and cluster name >>
+
+eksctl create addon --name aws-ebs-csi-driver --cluster eks4 --service-account-role-arn arn:aws:iam::xxxxxxxxx:role/AmazonEKS_EBS_CSI_DriverRole --force
+
+```
+
+Finally, all pods are running now 
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/e8488719-0fa3-4e38-a873-0f8d0e90da84)
+
+View the Prometheus dashboard by forwarding the deployment ports
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/12c3ff47-1f76-483a-81a8-091ff557267f)
+
+
+## 6. Install Grafana
+
+Add the Grafana helm chart repository. Later, Update the helm chart repository.
+
+```
+
+helm repo add grafana https://grafana.github.io/helm-charts 
+helm repo update
+
+```
+
+Now we need to create a Prometheus data source so that Grafana can access the Kubernetes metrics. 
+Create a yaml file prometheus-datasource.yaml and save the following data source configuration into it -
+
+```
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server.prometheus.svc.cluster.local
+      access: proxy
+      isDefault: true
+
+```
+
+Create a namespace grafana
+
+```
+kubectl create namespace grafana
+
+```
+
+Install the Grafana
+
+```
+helm install grafana grafana/grafana \
+    --namespace grafana \
+    --set persistence.storageClassName="gp2" \
+    --set persistence.enabled=true \
+    --set adminPassword='EKS!sAWSome' \    ## Not this password it will require to login Gafana Console 
+    --values prometheus-datasource.yaml \
+    --set service.type=LoadBalancer
+```
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/58249f2a-f866-46d5-af13-c82ad7642245)
+
+
+Verify the Grafana installation by using the following kubectl command -
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/af0d923a-7a44-4ea8-9bc5-259ccd8d7e57)
+
+
+Copy External IP address and open it in the browser -
+
+Password you mentioned as EKS!sAWSome while creating Grafana
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/8a92e41b-95cb-4883-a446-9aa4676973d6)
+
+
+## 7. Import Grafana dashboard from Grafana Labs
+
+Now we have set up everything in terms of Prometheus and Grafana. 
+For the custom Grafana Dashboard, we are going to use the open source grafana dashboard. 
+For this session, I am going to import a dashboard 6417
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/7a80baae-a245-4b30-afb0-2bcaf8856b99)
+
+Load and select the source as Prometheus
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/e8b39c47-d8be-4c5c-a98b-52ad82816e8f)
+
+Import it-
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/24d57bdd-c0e1-448f-a94f-c7d0a4206a3a)
+
+
+## 8. Deploy a Node.js application and monitor it on Grafana
+
+To make use of Grafana dashboard, we will deploy Node.js application on Kubernetes. 
+Download deployment.yml file from the below repository.
+
+https://github.com/sunitabachhav2007/node-todo-cicd
+
+To deploy the Node.js application on kubernetes cluster user the following kubectl command. 
+Verify the deployment by running the following kubectl command
+
+```
+kubectl apply -f deployment.yml
+kubectl get deployment
+kubectl get pods
+kubectl get service  ## To check the external IP of the EKS servcie it will need to browse the dashboard
+
+```
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/9c1eb76c-ffbc-47da-a27f-f81df8653bde)
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/a4a5d6d2-5226-4f0e-a734-ab022f6dc6d8)
+
+The Node.js Application is running successfully 
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/bec9d93b-3c19-40a2-ba53-c11f6f9a3bb2)
+
+Refresh the Grafana dashboard to verify the deployment
+
+![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/d8c78c0d-fa1c-4a42-9135-df1d84adbf3c)
+
