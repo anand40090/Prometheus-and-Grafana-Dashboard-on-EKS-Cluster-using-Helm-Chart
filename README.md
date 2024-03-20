@@ -80,6 +80,8 @@ eksctl get all -A   ## Run this command to check the EKS cluster post creation
 
 You can go back to your AWS dashboard and look for Elastic Kubernetes Service -> Clusters
 
+Output :-
+
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/9345f4dd-c9e7-437d-aecc-163e7187fee5)
 
 ## 3. Installing the Kubernetes Metrics Server
@@ -94,6 +96,7 @@ Verify that the metrics-server deployment is running the desired number of pods 
 kubectl get deployment metrics-server -n kube-system
 
 ```
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/39285c1d-c4d2-4acd-9946-239d285964e5)
 
@@ -120,6 +123,7 @@ Install Prometheus >>
     --set server.persistentVolume.storageClass="gp2"
 
 ```
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/8f4726bc-cbe2-4e9d-8375-7b00c1d2c50d)
 
@@ -149,9 +153,13 @@ eksctl create addon --name aws-ebs-csi-driver --cluster eks4 --service-account-r
 
 Finally, all pods are running now 
 
+Output :-
+
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/e8488719-0fa3-4e38-a873-0f8d0e90da84)
 
 View the Prometheus dashboard by forwarding the deployment ports
+
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/12c3ff47-1f76-483a-81a8-091ff557267f)
 
@@ -201,11 +209,14 @@ helm install grafana grafana/grafana \
     --values prometheus-datasource.yaml \
     --set service.type=LoadBalancer
 ```
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/58249f2a-f866-46d5-af13-c82ad7642245)
 
 
 Verify the Grafana installation by using the following kubectl command -
+
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/af0d923a-7a44-4ea8-9bc5-259ccd8d7e57)
 
@@ -213,6 +224,8 @@ Verify the Grafana installation by using the following kubectl command -
 Copy External IP address and open it in the browser -
 
 Password you mentioned as EKS!sAWSome while creating Grafana
+
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/8a92e41b-95cb-4883-a446-9aa4676973d6)
 
@@ -223,13 +236,19 @@ Now we have set up everything in terms of Prometheus and Grafana.
 For the custom Grafana Dashboard, we are going to use the open source grafana dashboard. 
 For this session, I am going to import a dashboard 6417
 
+Output :-
+
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/7a80baae-a245-4b30-afb0-2bcaf8856b99)
 
 Load and select the source as Prometheus
 
+Output :-
+
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/e8b39c47-d8be-4c5c-a98b-52ad82816e8f)
 
 Import it-
+
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/24d57bdd-c0e1-448f-a94f-c7d0a4206a3a)
 
@@ -252,15 +271,21 @@ kubectl get service  ## To check the external IP of the EKS servcie it will need
 
 ```
 
+Output :-
+
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/9c1eb76c-ffbc-47da-a27f-f81df8653bde)
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/a4a5d6d2-5226-4f0e-a734-ab022f6dc6d8)
 
 The Node.js Application is running successfully 
 
+Output :-
+
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/bec9d93b-3c19-40a2-ba53-c11f6f9a3bb2)
 
 Refresh the Grafana dashboard to verify the deployment
+
+Output :-
 
 ![image](https://github.com/anand40090/Prometheus-and-Grafana-Dashboard-on-EKS-Cluster-using-Helm-Chart/assets/32446706/d8c78c0d-fa1c-4a42-9135-df1d84adbf3c)
 
